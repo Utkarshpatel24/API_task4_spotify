@@ -1,0 +1,40 @@
+<body class="bg-black">
+  <div class="container-fluid">
+    <form action="" method="post">
+      <div class="row  fs-3 text-align-center mt-3">
+        <div class="col-6 ">
+          <input type="text" placeholder="Search here !!!" name="search">
+        </div>
+        <div class="col-6">
+          <button type="submit" class="btn btn-primary">Search</button>
+          <!-- <a class="btn btn-primary" href="/api/search" role="button">Login</a> -->
+        </div>
+      </div>
+      <div class=" text-white  ">
+        <span>
+          <div class="checkbox-form pl-5">
+            <label class="p-3"><input type="checkbox" class="form-check-input" name="check[]" value="album">Album</label>
+            <label class="p-3"><input type="checkbox" class="form-check-input" name="check[]" value="artist">Artist</label>
+            <label class="p-3"><input type="checkbox" class="form-check-input" name="check[]" value="playlist">Play list</label>
+            <label class="p-3"><input type="checkbox" class="form-check-input" name="check[]" value="track">Track</label>
+            <label class="p-3"><input type="checkbox" class="form-check-input" name="check[]" value="show">Show</label>
+            <label class="p-3"><input type="checkbox" class="form-check-input" name="check[]" value="episode">Episode</label>
+          </div>
+        </span>
+        <span><a class="btn btn-danger" href="/api/selectPlaylist">Visit Playlist</a></span>
+      </div>
+    </form>
+
+  </div>
+  <!-- <a href="/api/selectPlaylist?url=spotify:artist:1yzgJmZf5CxtFfGfRFm4Si">Playlist</a> -->
+</body>
+
+
+
+<?php
+// echo "<pre>";
+// print_r($data);
+// print_r($this->session->tokens);
+// print_r($response);
+?>
+<?php echo $display; ?>

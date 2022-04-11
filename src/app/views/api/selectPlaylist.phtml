@@ -1,0 +1,38 @@
+<div class="container-fluid">
+  <div class="row p-5">
+    <a class="btn btn-danger " href="/api/search">Home</a>
+  </div>
+  <div class="row border mt-4 text-center" style="display: <?php if($this->request->getQuery('url') == "")echo "none"; else echo "block"; ?>">
+    <h1>To add Track Click on below playlist name</h1>
+    <?php
+    $details = $response['items'];
+    $disp = "";
+    foreach ($details as $key => $val) {
+        $disp .= "<div class ='row fs-1'><div class = 'col'>
+        <span><a href = '/api/addToPlaylist/?pId=" . $val['id'] . "&url=" . $this->request->getQuery('url') . "'>" . $val['name'] . "</a></span>
+      </div>
+      </div>";
+    }
+    
+    echo $disp;
+    ?>
+
+
+  </div>
+  <div class="row  text-center fs-1" style="display: <?php if($this->request->getQuery('url') != "")echo "none"; else echo "block"; ?>">
+    <form action='/api/addNewPlaylist' method='POST'>
+      <input type='text' name='p_name' value='Add new PlayList'>
+      <button class="btn-primary" type='submit'>Add</button>
+    </form>
+
+
+  </div>
+  <?php echo $p_disp; ?>
+
+</div>
+
+<?php
+// echo "<pre>";
+// echo $this->session->tokens['access_token']."<br>";
+// print_r($response);
+?>
