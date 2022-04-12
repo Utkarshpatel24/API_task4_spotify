@@ -2,6 +2,7 @@
 
 use Phalcon\Mvc\Controller;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 
 class ApiController extends Controller
 {
@@ -12,6 +13,14 @@ class ApiController extends Controller
      */
     public function indexAction()
     {
+        $user = Users :: findFirst($this->session->mydetails['id']);
+        if ($user->access_token != null) {
+            echo "token present";
+            $acc = ['access_token' => $user->access_token];
+            $this->session->tokens = $acc;
+            $this->response->redirect('/api/me');
+            // die;
+        }
     }
 
 
@@ -59,6 +68,10 @@ class ApiController extends Controller
         $response =  $response->getBody();
         $response = json_decode($response, true);
         $this->session->tokens = $response;
+        $user = Users::findFirst($this->session->mydetails['id']);
+        $user->access_token = $this->session->tokens['access_token'];
+        $user->refresh_token = $this->session->tokens['refresh_token'];
+        $user->update();
         $this->response->redirect('/api/me');
     }
     /**
@@ -87,7 +100,14 @@ class ApiController extends Controller
                 $type .=  $check . ",";
             $type = substr($type, 0, strlen($type) - 1);
             $query = ['q' => $postdata['search'], 'type' => $type, 'access_token' => $this->session->tokens['access_token']];
-            $response = $client->request('GET', '/v1/search', ['query' => $query]);
+            try {
+
+                $response = $client->request('GET', '/v1/search', ['query' => $query]);
+            } catch(ClientException $e)
+            {
+                $this->eventsManager->fire('spotify:refreshToken', $this);
+                $response = $client->request('GET', '/v1/search', ['query' => $query]);
+            }
             $response = $response->getBody();
             $response = json_decode($response, true);
             $this->view->response = $response;
@@ -98,7 +118,7 @@ class ApiController extends Controller
                 if($key == 'tracks')
                 $style = "block";
                 foreach ($val['items'] as $k => $v) {
-                    $disp .= ' <div class="col-4 border border-3  text-wrap p-4 fst-italic text-success" style ="border-radius:20px;">
+                    $disp .= ' <div class="col-3 border border-3  text-wrap p-4 fst-italic text-success" style ="border-radius:1rem;margin:1rem;">
                                 <img class="" src="' . $v['images'][0]['url'] . '" alt="Card image" width="100px !important" height="100px !important">
                                 <div class="">
                                 <h4 class="">Name : ' . $v['name'] . '</h4>
@@ -128,16 +148,31 @@ class ApiController extends Controller
                 'base_uri' => 'https://api.spotify.com'
             ]
         );
+        try {
 
-        $response = $client->request(
-            'GET',
-            "/v1/me/playlists",
-            [
-                'headers' => [
-                    'Authorization' => "Bearer " . $token
+            $response = $client->request(
+                'GET',
+                "/v1/me/playlists",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer " . $token
+                    ]
                 ]
-            ]
-        );
+            );
+        } catch(ClientException $e)
+        {
+            $this->eventsManager->fire('spotify:refreshToken', $this);
+            $response = $client->request(
+                'GET',
+                "/v1/me/playlists",
+                [
+                    'headers' => [
+                        'Authorization' => "Bearer " . $token
+                    ]
+                ]
+            );
+            
+        }
         $response = json_decode($response->getBody(), true);
         $this->view->response = $response;
         //____________________________________________________get items of playlist_______________________________________
@@ -187,7 +222,15 @@ class ApiController extends Controller
                 'headers' => ['Authorization' => 'Bearer ' . $this->session->tokens['access_token']]
             ]
         );
-        $response = $client->request('POST', "/v1/playlists/" . $pId . "/tracks?uris=" . $uris);
+        try {
+
+            $response = $client->request('POST', "/v1/playlists/" . $pId . "/tracks?uris=" . $uris);
+        } catch(ClientException $e)
+        {
+            $this->eventsManager->fire('spotify:refreshToken', $this);
+            $response = $client->request('POST', "/v1/playlists/" . $pId . "/tracks?uris=" . $uris);
+            
+        }
         $this->response->redirect('/api/selectPlaylist');
     }
     /**
@@ -211,7 +254,15 @@ class ApiController extends Controller
             'public' => 'false'
         ];
         $id= $this->session->uid;
-        $response = $client->request('POST', '/v1/users/'.$id.'/playlists', ['body' => json_encode($args)]);
+        try {
+
+            $response = $client->request('POST', '/v1/users/'.$id.'/playlists', ['body' => json_encode($args)]);
+        } catch(ClientException $e)
+        {
+            $this->eventsManager->fire('spotify:refreshToken', $this);
+            $response = $client->request('POST', '/v1/users/'.$id.'/playlists', ['body' => json_encode($args)]);
+            
+        }
         $this->response->redirect('/api/selectPlaylist');
     }
     /**
@@ -228,10 +279,19 @@ class ApiController extends Controller
             ]
         );
         $query = ['access_token' => $this->session->tokens['access_token']];
-        $response = $client->request('GET', "/v1/me", ['query' => $query]);
+        try {
+
+            $response = $client->request('GET', "/v1/me", ['query' => $query]);
+        } catch(ClientException $e)
+        {
+            $this->eventsManager->fire('spotify:refreshToken', $this);
+            $response = $client->request('GET', "/v1/me", ['query' => $query]);
+            
+        }
         $response = json_decode($response->getBody(), true);
         $this->session->uid = $response['id'];
-        $this->response->redirect('/api/search');
+        $this->session->userDetails = $response;
+        $this->response->redirect('/user/dashboard');
     }
 
     /**
@@ -252,7 +312,15 @@ class ApiController extends Controller
         );
 
         $arg = ['tracks'=>[['uri'=>$uri]]];
-        $response = $client->request('DELETE', '/v1/playlists/'.$pId.'/tracks', ['body'=>json_encode($arg)]);
+        try {
+
+            $response = $client->request('DELETE', '/v1/playlists/'.$pId.'/tracks', ['body'=>json_encode($arg)]);
+        } catch(ClientException $e)
+        {
+            $this->eventsManager->fire('spotify:refreshToken', $this);
+            $response = $client->request('DELETE', '/v1/playlists/'.$pId.'/tracks', ['body'=>json_encode($arg)]);
+            
+        }
         $this->response->redirect('/api/selectPlaylist');
     }
     /**
@@ -270,7 +338,15 @@ class ApiController extends Controller
                 'headers' => ['Authorization' => 'Bearer '.$this->session->tokens['access_token']]
             ]
         );
-        $response = $client->request('DELETE', '/v1/playlists/'.$pId.'/followers');
+        try {
+
+            $response = $client->request('DELETE', '/v1/playlists/'.$pId.'/followers');
+        } catch(ClientException $e)
+        {
+            $this->eventsManager->fire('spotify:refreshToken', $this);
+            $response = $client->request('DELETE', '/v1/playlists/'.$pId.'/followers');
+            
+        }
         $this->response->redirect('/api/selectPlaylist');
     }
 }

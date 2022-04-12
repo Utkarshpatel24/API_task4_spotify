@@ -11,6 +11,9 @@ use Phalcon\Config;
 //___________session____
 use Phalcon\Session\Manager;
 use Phalcon\Session\Adapter\Stream;
+//____________event manager_________
+use Phalcon\Events\Event;
+use Phalcon\Events\Manager as EventsManager;
 
 require_once"../vendor/autoload.php";
 
@@ -27,6 +30,7 @@ $loader->registerDirs(
     [
         APP_PATH . "/controllers/",
         APP_PATH . "/models/",
+        APP_PATH . "/listeners/"
     ]
 );
 
@@ -66,14 +70,14 @@ $application = new Application($container);
 $container->set(
     'db',
     function () {
-        $config = $this->get('config');
+       // $config = $this->get('config');
         return new Mysql(
             [
                
-                'host'     => $config['db']['host'],
-                'username' => $config['db']['username'],
-                'password' => $config['db']['password'],
-                'dbname'   => $config['db']['dbname'],
+                'host'     => 'mysql-server',
+                'username' => 'root',
+                'password' => 'secret',
+                'dbname'   => 'api',
 
             ]
         );
@@ -93,7 +97,17 @@ $container->set(
         return $session;
     }
 );
-
+$eventsManager = new EventsManager();
+$container->set(
+    "eventsManager",
+    function () use ($eventsManager) {
+        $eventsManager->attach(
+            'spotify',
+            new TokenListener()
+        );
+        return $eventsManager;
+    }
+);
 
 try {
     // Handle the request
@@ -102,7 +116,7 @@ try {
     );
 
     $response->send();
-} catch (\Exception $e) {
+} catch (Exception $e) {
      echo 'Exception: ', $e->getMessage();
 
     

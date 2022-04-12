@@ -1,0 +1,41 @@
+<?php
+$u_d = $this->session->userDetails;
+$disp ="";
+$disp .='<dl class="row fw-bolder ">
+<dt class="col-sm-3">Name</dt>
+<dd class="col-sm-9">'.$u_d['display_name'].'</dd>
+<dt class="col-sm-3">Id</dt>
+<dd class="col-sm-9">'.$u_d['id'].'</dd>
+<dt class="col-sm-3">Type</dt>
+<dd class="col-sm-9">'.$u_d['type'].'</dd>
+<dt class="col-sm-3">Uri</dt>
+<dd class="col-sm-9">'.$u_d['uri'].'</dd>
+</dl>';
+?>
+<body class="">
+<div class="contsiner-fluid"> 
+<div class="row  text-center text-dark mt-5 ">
+    <h1>Dashboard</h1>
+
+</div>
+<div class="row  shadow-sm">
+    <div class="col-md-6 border d-flex bd-highlight flex-column">
+        <p class="fs-3 text-center text-dark fw-bolder fst-italic">User Details</p>
+        <?php echo $disp; ?>
+    </div>
+    <div class="col-md-6 border d-flex justify-content-around">
+        <p><a class="btn btn-danger " href="/api/search">Explore APP</a></p>
+        <p><a class="btn btn-primary" href="/user/signout">Sign Out</a></p>        
+    </div>
+
+</div>
+<div class="row     ">
+    <?php echo $r_disp; ?>
+</div>
+
+</div>
+</body>
+<?php
+// echo "<pre>";
+// print_r($this->session->userDetails);
+?>
